@@ -321,14 +321,14 @@
 <script>
 (function(){
 /* ---------- config ---------- */
-var CONFIG={endpoint:'/api/ssm-status'};
+var CONFIG={endpoint:'/ssm-jelas-status.php'};
 var enquiryForm=document.getElementById('enquiry-form');
 enquiryForm.addEventListener('submit',function(event){
  event.preventDefault();if(!enquiryForm.reportValidity())return;
  var button=enquiryForm.querySelector('button[type="submit"]'),status=document.getElementById('enquiry-status');
  button.disabled=true;status.textContent='Sending your enquiry...';
  var data=Object.fromEntries(new FormData(enquiryForm).entries());data.consent=enquiryForm.elements.consent.checked;
- fetch('/api/enquiries',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})
+ fetch('/enquiries.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})
  .then(function(response){return response.json().then(function(body){if(!response.ok)throw Error(body.error||'Unable to submit your enquiry.');return body})})
  .then(function(){enquiryForm.reset();status.textContent='Thank you. Redirecting...';window.location.assign('/thank-you');})
  .catch(function(error){status.textContent=error.message||'Unable to submit your enquiry. Please try again.'})
