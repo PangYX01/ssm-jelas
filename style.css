@@ -403,7 +403,7 @@ header.solid #mb {
 
 @media(max-width:760px) {
   .strip {
-    grid-template-columns:1fr;
+    grid-template-columns:1fr !important;
     row-gap:16px
   }
   .strip div {
@@ -1627,7 +1627,7 @@ footer p, footer li { font-size: var(--type-ui); line-height: 1.7; }
   .hero { padding: 76px 0 84px; background-position: 58% top; }
   .hero h1 { max-width: 18ch;  }
   .hero .lead { width: auto; max-width: 44ch;  }
-    .strip { grid-template-columns: minmax(0,1fr); padding-block: 4px; }
+    .strip { grid-template-columns: minmax(0,1fr) !important; padding-block: 4px; }
   .strip div, .strip div:first-child { padding: 18px 20px;  }
   .strip div + div::before { left: 20px; right: 20px; top: 0; bottom: auto; width: auto; height: 1px; }
     .ckw { padding: 20px; }
