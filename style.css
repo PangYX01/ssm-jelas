@@ -461,7 +461,7 @@ input[aria-invalid=true] {
   align-items:center;
   color:var(--er);
   font-weight:600;
-  margin:-8px 0 14px;
+  margin:10px 0 14px;
   }
 
 .err:empty {
@@ -499,6 +499,10 @@ input[aria-invalid=true] {
 
 #res {
   margin-top:22px
+}
+
+#res > p {
+  color:var(--ink);
 }
 
 .rp {
@@ -994,7 +998,7 @@ footer .logo i {
   min-height:2.5em;
   margin-bottom:6px;
   color:var(--ssm-slate-500);
-  
+  font-size: var(--type-kicker);
   font-weight:600;
   letter-spacing:.08em;
   text-transform:uppercase
@@ -1003,7 +1007,7 @@ footer .logo i {
 .ssm-info-value {
   display:block;
   color:var(--ssm-navy-950);
-  
+  font-size: var(--type-ui);
   font-weight:560;
   line-height:1.4;
   overflow-wrap:anywhere
