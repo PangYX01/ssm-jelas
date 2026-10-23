@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Enquiries | SSM Jelas Admin</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <main>
+    <header><div><a href="/">← SSM Jelas</a><h1>Guidance enquiries</h1><p>Submitted requests, newest first.</p></div><button id="logout" type="button" hidden>Sign out</button></header>
+    <section id="login-panel" class="panel"><h2>Admin sign in</h2><form id="login-form"><label for="password">Admin password</label><input id="password" type="password" autocomplete="current-password" required><button type="submit">Sign in</button></form></section>
+    <section id="records-panel" hidden><div class="toolbar"><strong id="count"></strong><button id="refresh" type="button">Refresh</button></div><div id="records" class="records"></div></section>
+    <p id="status" role="status" aria-live="polite"></p>
+  </main>
+  <script>
+  (function(){
+    var login=document.getElementById('login-panel'),panel=document.getElementById('records-panel'),status=document.getElementById('status'),logout=document.getElementById('logout'),records=document.getElementById('records');
+    function text(tag,value){var el=document.createElement(tag);el.textContent=value==null?'':String(value);return el}
+    function field(card,label,value){var item=document.createElement('div');item.className='field';item.append(text('dt',label),text('dd',value));card.append(item)}
+    function showLogin(){login.hidden=false;panel.hidden=true;logout.hidden=true}
+    function showRecords(items){login.hidden=true;panel.hidden=false;logout.hidden=false;records.replaceChildren();document.getElementById('count').textContent=items.length+' latest enquiries';
+      if(!items.length){records.append(text('p','No enquiries yet.'));return}
+      items.forEach(function(item){var card=document.createElement('article');card.className='record';var heading=text('h2',item.name);card.append(heading,text('time',new Date(item.created_at).toLocaleString()));var list=document.createElement('dl');field(list,'Contact number',item.contact_number);field(list,'Email',item.email);field(list,'Help with',item.topic);field(list,'Message',item.message||'—');field(list,'Consent recorded',new Date(item.consent_at).toLocaleString());card.append(list);records.append(card)})
+    }
+    function request(method,data){return fetch('/api/admin',{method:method,credentials:'same-origin',headers:{'Content-Type':'application/json'},body:data?JSON.stringify(data):undefined}).then(function(r){return r.json().then(function(body){if(!r.ok)throw Object.assign(Error(body.error||'Request failed'),{code:r.status});return body})})}
+    function load(){status.textContent='Loading enquiries...';request('GET').then(function(data){showRecords(data.records);status.textContent=''}).catch(function(error){if(error.code===401)showLogin();status.textContent=error.code===401?'':error.message})}
+    document.getElementById('login-form').addEventListener('submit',function(e){e.preventDefault();status.textContent='Signing in...';request('POST',{action:'login',password:document.getElementById('password').value}).then(function(){document.getElementById('password').value='';load()}).catch(function(error){status.textContent=error.message})});
+    document.getElementById('refresh').addEventListener('click',load);
+    logout.addEventListener('click',function(){request('POST',{action:'logout'}).finally(function(){showLogin();status.textContent='Signed out.'})});
+    load();
+  })();
+  </script>
+</body>
+</html>

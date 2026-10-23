@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Thank You – SSM Jelas</title>
+<meta name="description" content="Your enquiry has been submitted. Our team will review your request and respond to you.">
+<meta name="robots" content="noindex, follow">
+<link rel="icon" type="image/png" href="../img/favicon-light.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="../style.css">
+<style>
+/* Thank-you page layout only; base tokens/typography come from /style.css */
+.ty-main { display: grid; place-items: center; text-align: center; padding: 96px 0; min-height: 56vh; }
+.ty-card { max-width: 640px; margin: 0 auto; }
+.ty-badge { width: 88px; height: 88px; border-radius: 50%; background: var(--tint); color: var(--brand-strong); display: grid; place-items: center; margin: 0 auto 30px; }
+.ty-badge svg { width: 44px; height: 44px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.ty-kicker { font-size: var(--type-kicker); font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: var(--brand-strong); margin: 0 0 14px; }
+.ty-main h1 { font-size: var(--type-h1); line-height: 1.2; letter-spacing: -.025em; margin: 0 0 18px; color: var(--navy); }
+.ty-main p { color: #526079; line-height: 1.75; margin: 0 auto 10px; max-width: 54ch; }
+.ty-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 34px; }
+@media (max-width: 560px) {
+  .ty-main { padding: 64px 0; }
+  .ty-main h1 { font-size: 2rem; }
+  .ty-actions { flex-direction: column; }
+  .ty-actions .btn { width: 100%; }
+}
+</style>
+</head>
+<body>
+<svg class="icon-definitions" width="0" height="0" aria-hidden="true"><defs>
+<symbol id="mn" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+</defs></svg>
+
+<header id="hd">
+<div class="utility-bar"><div class="w"><p class="trust">Independent informational website. Not affiliated with Suruhanjaya Syarikat Malaysia (SSM) or the Malaysian Government.</p></div></div>
+<div class="w hb">
+<a class="logo" href="/" aria-label="SSM Jelas home"><img src="../img/favicon.png" alt="SSM Jelas" width="40px" height="40px" />SSM Jelas</a>
+<button id="mb" aria-expanded="false" aria-controls="nav" aria-label="Open menu"><svg class="ic" width="26" height="26"><use href="#mn"/></svg></button>
+<nav id="nav" aria-label="Main"><ul>
+<li><a href="/#what">About SSM</a></li><li><a href="/#renewal">SSM Renewal</a></li><li><a href="/#services">SSM Services</a></li><li><a href="/#faq">FAQ</a></li>
+<li><a class="btn" href="/#top">Check SSM Status</a></li>
+</ul></nav>
+</div>
+</header>
+
+<main>
+<section class="ty-main">
+  <div class="w">
+    <div class="ty-card">
+      <div class="ty-badge" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m8 12 3 3 5-6"></path></svg>
+      </div>
+      <p class="ty-kicker">Enquiry received</p>
+      <h1>Thank you for your enquiry</h1>
+      <p>Your enquiry has been submitted successfully. Our team will review your request and get back to you soon.</p>
+      <p>In the meantime, feel free to browse our website for helpful SSM guides and explore our other SSM guidance services.</p>
+      <div class="ty-actions">
+        <a class="btn" href="/">Back to Home</a>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+<div class="w">
+<div class="fg">
+<div><a class="logo" href="/"><img src="../img/favicon-light.png" alt="SSM Jelas" width="40px" height="40px" />SSM Jelas</a><p>Independent SSM information resource. Not affiliated with Suruhanjaya Syarikat Malaysia or the Malaysian Government.</p></div>
+<div><h3>Learn</h3><ul><li><a href="/#what">About SSM</a></li><li><a href="/#renewal">SSM Renewal</a></li><li><a href="/#check">Status Guide</a></li><li><a href="/#faq">FAQ</a></li></ul></div>
+<div><h3>Resources</h3><ul><li><a href="/#official">Official SSM Services</a></li><li><a href="/#faq">FAQ</a></li></ul></div>
+<div><h3>Website</h3><ul><li><a href="/#disclaimer">Disclaimer</a></li><li><a href="/#privacy">Privacy &amp; Lookup Information</a></li></ul></div>
+</div>
+<p class="fn">Copyright © 2026 SSM Jelas. Independent SSM information resource. Not affiliated with Suruhanjaya Syarikat Malaysia or the Malaysian Government.</p>
+</div>
+</footer>
+
+<script>
+/* Minimal header behavior: sticky "solid" state + mobile menu toggle */
+var hd=document.getElementById('hd'),mb=document.getElementById('mb'),nav=document.getElementById('nav');
+function sc(){hd.classList.toggle('solid',window.scrollY>40)}sc();window.addEventListener('scroll',sc,{passive:true});
+function tog(o){nav.classList.toggle('open',o);hd.classList.toggle('open',o);mb.setAttribute('aria-expanded',o);mb.setAttribute('aria-label',o?'Close menu':'Open menu')}
+mb.addEventListener('click',function(){tog(!nav.classList.contains('open'))});
+nav.addEventListener('click',function(e){if(e.target.closest('a'))tog(false)});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')tog(false)});
+</script>
+</body>
+</html>
