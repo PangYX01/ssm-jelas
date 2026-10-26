@@ -284,6 +284,7 @@ input[type="checkbox"]:disabled { cursor: not-allowed; opacity: .5; }
 .enquiries-table tr.is-selected { background: #f0f6ff !important; }
 .cell-checkbox, .col-checkbox { width: 45px; text-align: center; }
 .enquiries-table th:first-child, .enquiries-table td:first-child { padding-left: 17px; }
+@media (max-width: 620px) { .enquiries-table th:first-child, .enquiries-table td:first-child { padding-left: 14px; } }
 .cell-actions { min-width: 100px; }
 .row-actions { display: inline-flex; gap: 7px; align-items: center; }
 .delete-button { background: #fff0f1; color: #e53a46; }
