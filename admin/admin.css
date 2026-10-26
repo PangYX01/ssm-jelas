@@ -269,7 +269,7 @@ body.login-mode #status {
 /* Bulk selection and action bar */
 .records-panel { overflow: visible; }
 .filters { position: relative; z-index: 5; background: #fff; border-radius: 14px 14px 0 0; }
-.bulk-bar { display: flex; gap: 20px; flex-wrap: wrap; align-items: center; padding: 13px 22px; margin: 0 0 0; background: #edf4ff; border-top: 1px solid #dce8ff; border-bottom: 1px solid #dce8ff; }
+.bulk-bar { display: flex; gap: 20px; flex-wrap: wrap; align-items: center; padding: 13px 22px 13px 17px; margin: 0 0 0; background: #edf4ff; border-top: 1px solid #dce8ff; border-bottom: 1px solid #dce8ff; }
 .bulk-selection, .bulk-actions { display: flex; align-items: center; gap: 12px; }
 .bulk-selection strong { font-size: 13px; font-weight: 700; color: #1b2e56; white-space: nowrap; }
 input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--brand); cursor: pointer; }
@@ -360,3 +360,31 @@ input[type="checkbox"]:disabled { cursor: not-allowed; opacity: .5; }
   .clear-button { grid-column: 1; grid-row: 4; }
   .export-all-button { grid-column: 2; grid-row: 4; }
 }
+
+
+/* Pinned Actions column: only the other columns scroll horizontally. */
+.table-scroll { position: relative; }
+.enquiries-table .col-actions,
+.enquiries-table .cell-actions {
+  position: sticky;
+  right: 0;
+  z-index: 2;
+  width: 116px;
+  min-width: 116px;
+  max-width: 116px;
+  white-space: nowrap;
+  background: #fff;
+  box-shadow: -10px 0 18px -15px rgba(22, 43, 86, .45);
+}
+.enquiries-table .col-actions {
+  z-index: 3;
+  background: #f0f4fc;
+}
+.enquiries-table tbody tr:nth-child(even) .cell-actions { background: #fafbfe; }
+.enquiries-table tbody tr:hover .cell-actions { background: #f2f5ff; }
+.enquiries-table tbody tr.is-selected .cell-actions { background: #f0f6ff; }
+.enquiries-table tbody tr.is-selected:hover .cell-actions { background: #e7f0ff; }
+
+/* Topic tags should not wrap, even when the remaining columns need horizontal scrolling. */
+.enquiries-table .cell-topic { min-width: max-content; white-space: nowrap; }
+.enquiries-table .cell-topic .topic-badge { white-space: nowrap; flex-wrap: nowrap; max-width: none; }
