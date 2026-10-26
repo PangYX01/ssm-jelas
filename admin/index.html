@@ -2,33 +2,413 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="robots" content="noindex,nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#2e3192">
   <title>Enquiries | SSM Jelas Admin</title>
+  <link rel="icon" type="image/png" href="../img/favicon-light.png">
   <link rel="stylesheet" href="admin.css">
 </head>
 <body>
-  <main>
-    <header><div><a href="/">← SSM Jelas</a><h1>Guidance enquiries</h1><p>Submitted requests, newest first.</p></div><button id="logout" type="button" hidden>Sign out</button></header>
-    <section id="login-panel" class="panel"><h2>Admin sign in</h2><form id="login-form"><label for="password">Admin password</label><input id="password" type="password" autocomplete="current-password" required><button type="submit">Sign in</button></form></section>
-    <section id="records-panel" hidden><div class="toolbar"><strong id="count"></strong><button id="refresh" type="button">Refresh</button></div><div id="records" class="records"></div></section>
-    <p id="status" role="status" aria-live="polite"></p>
-  </main>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Admin navigation">
+      <a class="brand" href="/" aria-label="SSM Jelas homepage">
+        <img src="../img/favicon-light.png" alt="" width="52" height="52">
+        <span class="brand-name">SSM Jelas</span>
+      </a>
+      <nav class="side-nav" aria-label="Admin">
+        <a href="./" class="side-link active" aria-current="page">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg>
+          <span>Enquiries</span>
+        </a>
+        <button class="side-link" id="logout" type="button" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17l5-5-5-5m5 5H3"/><path d="M12 3h6a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3h-6"/></svg>
+          <span>Sign out</span>
+        </button>
+      </nav>
+      <a class="back-link" href="/">Back to website <span aria-hidden="true">↗</span></a>
+    </aside>
+
+    <main class="main-content">
+      <header class="page-header">
+        <div>
+          <p class="eyebrow">SSM Jelas · Admin Dashboard</p>
+          <h1>Enquiry Submissions</h1>
+          <p class="page-description">View and manage enquiries submitted through the SSM Jelas website.</p>
+        </div>
+        <div class="header-actions" id="header-actions" hidden>
+          <button id="refresh" class="refresh-button" type="button" title="Refresh enquiries" aria-label="Refresh enquiries">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5"/><path d="M4 17v-5h5"/><path d="M5.5 9a7.5 7.5 0 0 1 13-2l1.5 5M4 12l1.5 5a7.5 7.5 0 0 0 13-2"/></svg>
+          </button>
+          <div class="summary-card" id="summary-card">
+          <span class="summary-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M4 19V11h4v8M10 19V5h4v14M16 19v-9h4v9M2 19h20"/></svg>
+          </span>
+          <span><span class="summary-label">Enquiries loaded</span><strong id="count">0</strong></span>
+          </div>
+        </div>
+      </header>
+
+      <section id="login-panel" class="login-card" hidden aria-labelledby="login-title">
+        <span class="login-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+        </span>
+        <h2 id="login-title">Admin sign in</h2>
+        <p>Enter your admin password to access enquiries.</p>
+        <form id="login-form">
+          <label for="password">Admin password</label>
+          <input id="password" type="password" autocomplete="current-password" placeholder="Enter your password" required>
+          <button type="submit" class="primary-button">Sign in</button>
+        </form>
+      </section>
+
+      <section id="records-panel" class="records-panel" aria-label="Enquiry records" hidden>
+        <div class="filters" role="search" aria-label="Filter enquiries">
+          <div class="filter-field search-field">
+            <label class="visually-hidden" for="search">Search enquiries</label>
+            <div class="search-input-wrap">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+              <input id="search" type="search" autocomplete="off" placeholder="Search name, email, contact number or message…">
+            </div>
+          </div>
+          <div class="filter-field topic-field">
+            <label for="topic-filter">Topic</label>
+            <select id="topic-filter"><option value="">All Topics</option></select>
+          </div>
+          <div class="filter-field date-field">
+            <span class="field-label" id="date-range-label">Date Range</span>
+            <div class="date-range" role="group" aria-labelledby="date-range-label">
+              <label for="date-from" class="visually-hidden">From date</label>
+              <input id="date-from" type="date" title="From date" aria-label="From date">
+              <span class="date-separator" aria-hidden="true">–</span>
+              <label for="date-to" class="visually-hidden">To date</label>
+              <input id="date-to" type="date" title="To date" aria-label="To date">
+            </div>
+          </div>
+          <button id="clear-filters" class="clear-button" type="button">Clear</button>
+        </div>
+
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Enquiries table (scroll horizontally on smaller screens)">
+          <table class="enquiries-table">
+            <thead><tr>
+              <th scope="col" class="col-id">#</th>
+              <th scope="col">Name</th>
+              <th scope="col">Email</th>
+              <th scope="col">Contact Number</th>
+              <th scope="col">Topic</th>
+              <th scope="col">Message (Preview)</th>
+              <th scope="col">Submitted At</th>
+              <th scope="col" class="col-actions">Actions</th>
+            </tr></thead>
+            <tbody id="records"></tbody>
+          </table>
+        </div>
+        <div id="empty-state" class="empty-state" hidden>
+          <span class="empty-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h7"/></svg>
+          </span>
+          <h2>No enquiries found</h2>
+          <p id="empty-description">Try adjusting your search or filters.</p>
+        </div>
+        <footer class="table-footer">
+          <p id="results-summary">Showing 0 entries</p>
+          <div class="pagination" id="pagination" aria-label="Enquiry pages"></div>
+        </footer>
+      </section>
+      <p id="status" role="status" aria-live="polite"></p>
+    </main>
+  </div>
+
+  <div id="drawer-backdrop" class="drawer-backdrop" aria-hidden="true"></div>
+  <aside id="details-drawer" class="details-drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title" aria-hidden="true" inert>
+    <div class="drawer-header">
+      <div>
+        <p class="drawer-eyebrow">Enquiry record</p>
+        <h2 id="drawer-title">Enquiry Details</h2>
+      </div>
+      <button id="close-drawer" type="button" class="icon-button drawer-close" aria-label="Close enquiry details">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5 19 19M19 5 5 19"/></svg>
+      </button>
+    </div>
+    <div id="drawer-fields" class="drawer-fields"></div>
+    <div class="drawer-footer"><button id="close-drawer-bottom" class="secondary-button" type="button">Close</button></div>
+  </aside>
+
   <script>
-  (function(){
-    var login=document.getElementById('login-panel'),panel=document.getElementById('records-panel'),status=document.getElementById('status'),logout=document.getElementById('logout'),records=document.getElementById('records');
-    function text(tag,value){var el=document.createElement(tag);el.textContent=value==null?'':String(value);return el}
-    function field(card,label,value){var item=document.createElement('div');item.className='field';item.append(text('dt',label),text('dd',value));card.append(item)}
-    function showLogin(){login.hidden=false;panel.hidden=true;logout.hidden=true}
-    function showRecords(items){login.hidden=true;panel.hidden=false;logout.hidden=false;records.replaceChildren();document.getElementById('count').textContent=items.length+' latest enquiries';
-      if(!items.length){records.append(text('p','No enquiries yet.'));return}
-      items.forEach(function(item){var card=document.createElement('article');card.className='record';var heading=text('h2',item.name);card.append(heading,text('time',new Date(item.created_at).toLocaleString()));var list=document.createElement('dl');field(list,'Contact number',item.contact_number);field(list,'Email',item.email);field(list,'Help with',item.topic);field(list,'Message',item.message||'—');field(list,'Consent recorded',new Date(item.consent_at).toLocaleString());card.append(list);records.append(card)})
+  (function () {
+    'use strict';
+    var login = document.getElementById('login-panel');
+    var panel = document.getElementById('records-panel');
+    var status = document.getElementById('status');
+    var logout = document.getElementById('logout');
+    var tbody = document.getElementById('records');
+    var search = document.getElementById('search');
+    var topic = document.getElementById('topic-filter');
+    var from = document.getElementById('date-from');
+    var to = document.getElementById('date-to');
+    var drawer = document.getElementById('details-drawer');
+    var backdrop = document.getElementById('drawer-backdrop');
+    var drawerFields = document.getElementById('drawer-fields');
+    var pagination = document.getElementById('pagination');
+    var empty = document.getElementById('empty-state');
+    var allRecords = [];
+    var page = 1;
+    var perPage = 8;
+    var lastFocus = null;
+
+    function node(tag, className, content) {
+      var el = document.createElement(tag);
+      if (className) el.className = className;
+      if (content !== undefined && content !== null) el.textContent = String(content);
+      return el;
     }
-    function request(method,data){return fetch('/admin-api.php',{method:method,credentials:'same-origin',headers:{'Content-Type':'application/json'},body:data?JSON.stringify(data):undefined}).then(function(r){return r.json().then(function(body){if(!r.ok)throw Object.assign(Error(body.error||'Request failed'),{code:r.status});return body})})}
-    function load(){status.textContent='Loading enquiries...';request('GET').then(function(data){showRecords(data.records);status.textContent=''}).catch(function(error){if(error.code===401)showLogin();status.textContent=error.code===401?'':error.message})}
-    document.getElementById('login-form').addEventListener('submit',function(e){e.preventDefault();status.textContent='Signing in...';request('POST',{action:'login',password:document.getElementById('password').value}).then(function(){document.getElementById('password').value='';load()}).catch(function(error){status.textContent=error.message})});
-    document.getElementById('refresh').addEventListener('click',load);
-    logout.addEventListener('click',function(){request('POST',{action:'logout'}).finally(function(){showLogin();status.textContent='Signed out.'})});
+    function iconMarkup(name) {
+      if (name === 'eye') return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.4-5.5 9.5-5.5 9.5 5.5 9.5 5.5-3.4 5.5-9.5 5.5S2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.5"/></svg>';
+      if (name === 'chevron-left') return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>';
+      return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>';
+    }
+    function parseDate(value) {
+      var date = new Date(value || '');
+      return Number.isNaN(date.getTime()) ? null : date;
+    }
+    function displayDate(value) {
+      var date = parseDate(value);
+      if (!date) return '—';
+      return date.toLocaleDateString('en-MY', {day:'2-digit', month:'short', year:'numeric'});
+    }
+    function displayTime(value) {
+      var date = parseDate(value);
+      if (!date) return '';
+      return date.toLocaleTimeString('en-MY', {hour:'2-digit', minute:'2-digit', hour12:true});
+    }
+    function badgeClass(value) {
+      var label = String(value || '').toLowerCase();
+      if (label.includes('renew') || label.includes('expir')) return 'topic-renewal';
+      if (label.includes('document') || label.includes('certificate')) return 'topic-documents';
+      if (label.includes('information') || label.includes('administrat') || label.includes('change')) return 'topic-information';
+      return 'topic-registration';
+    }
+    function addBadge(value) {
+      return node('span', 'topic-badge ' + badgeClass(value), value || 'Other');
+    }
+    function request(method, data) {
+      return fetch('/admin-api.php', {
+        method: method,
+        credentials: 'same-origin',
+        headers: {'Content-Type':'application/json'},
+        body: data ? JSON.stringify(data) : undefined
+      }).then(function (response) {
+        return response.json().then(function (body) {
+          if (!response.ok) throw Object.assign(Error(body.error || 'Request failed'), {code: response.status});
+          return body;
+        });
+      });
+    }
+    function setLoginMode(isLoginMode) {
+      document.body.classList.toggle('login-mode', !!isLoginMode);
+    }
+    function showLogin() {
+      closeDrawer(false);
+      setLoginMode(true);
+      login.hidden = false;
+      panel.hidden = true;
+      logout.hidden = true;
+      document.getElementById('header-actions').hidden = true;
+      allRecords = [];
+    }
+    function populateTopics() {
+      var topics = Array.from(new Set(allRecords.map(function (record) { return String(record.topic || ''); }).filter(Boolean))).sort();
+      topic.replaceChildren(new Option('All Topics', ''));
+      topics.forEach(function (value) { topic.add(new Option(value, value)); });
+    }
+    function dateKey(value) {
+      var date = parseDate(value);
+      if (!date) return '';
+      var y = String(date.getFullYear());
+      var m = String(date.getMonth() + 1).padStart(2, '0');
+      var d = String(date.getDate()).padStart(2, '0');
+      return y + '-' + m + '-' + d;
+    }
+    function filteredRecords() {
+      var q = search.value.trim().toLocaleLowerCase();
+      var selectedTopic = topic.value;
+      return allRecords.filter(function (record) {
+        if (selectedTopic && record.topic !== selectedTopic) return false;
+        if (q) {
+          var text = [record.name, record.email, record.contact_number, record.message, record.topic, record.id].join(' ').toLocaleLowerCase();
+          if (!text.includes(q)) return false;
+        }
+        var day = dateKey(record.created_at);
+        if (from.value && (!day || day < from.value)) return false;
+        if (to.value && (!day || day > to.value)) return false;
+        return true;
+      });
+    }
+    function makeButton(text, label, className) {
+      var btn = node('button', className, text);
+      btn.type = 'button';
+      btn.setAttribute('aria-label', label);
+      return btn;
+    }
+    function appendCell(row, content, className) {
+      var cell = node('td', className || '');
+      if (content instanceof Node) cell.append(content);
+      else cell.textContent = content === undefined || content === null || content === '' ? '—' : String(content);
+      row.append(cell);
+      return cell;
+    }
+    function renderRow(record) {
+      var row = node('tr');
+      appendCell(row, record.id, 'cell-id');
+      appendCell(row, record.name, 'cell-name');
+      var emailCell = node('td', 'cell-email');
+      row.append(emailCell);
+      var mailto = node('a', '', record.email || '—');
+      mailto.href = 'mailto:' + encodeURIComponent(record.email || '');
+      emailCell.append(mailto);
+      appendCell(row, record.contact_number, 'cell-contact');
+      appendCell(row, addBadge(record.topic), 'cell-topic');
+      var preview = node('span', 'message-preview', record.message || '—');
+      preview.title = record.message || '';
+      appendCell(row, preview, 'cell-message');
+      var time = node('time', 'submitted-time');
+      time.dateTime = record.created_at || '';
+      time.append(node('span', '', displayDate(record.created_at)), node('small', '', displayTime(record.created_at)));
+      appendCell(row, time, 'cell-date');
+      var btn = makeButton('', 'View enquiry from ' + (record.name || 'unknown'), 'icon-button view-button');
+      btn.innerHTML = iconMarkup('eye');
+      btn.addEventListener('click', function () { openDrawer(record, btn); });
+      appendCell(row, btn, 'cell-actions');
+      return row;
+    }
+    function pageButton(label, newPage, options) {
+      var btn = makeButton('', label, 'page-button' + (options && options.active ? ' is-active' : ''));
+      btn.innerHTML = options && options.icon ? iconMarkup(options.icon) : String(newPage);
+      if (options && options.active) btn.setAttribute('aria-current', 'page');
+      if (options && options.disabled) btn.disabled = true;
+      btn.addEventListener('click', function () { page = newPage; render(); });
+      return btn;
+    }
+    function render() {
+      var records = filteredRecords();
+      var pages = Math.max(1, Math.ceil(records.length / perPage));
+      page = Math.min(page, pages);
+      var offset = (page - 1) * perPage;
+      var visible = records.slice(offset, offset + perPage);
+      tbody.replaceChildren.apply(tbody, visible.map(renderRow));
+      empty.hidden = records.length !== 0;
+      document.querySelector('.table-scroll').hidden = records.length === 0;
+      document.getElementById('empty-description').textContent = allRecords.length ? 'Try adjusting your search or filters.' : 'New enquiries will appear here when submitted.';
+      document.getElementById('results-summary').textContent = records.length ?
+        'Showing ' + (offset + 1) + ' to ' + (offset + visible.length) + ' of ' + records.length + ' entries' :
+        'Showing 0 entries';
+      pagination.replaceChildren();
+      if (pages <= 1) return;
+      pagination.append(pageButton('Previous page', page - 1, {icon:'chevron-left', disabled:page === 1}));
+      var first = Math.max(1, Math.min(page - 2, pages - 4));
+      var last = Math.min(pages, first + 4);
+      for (var i = first; i <= last; i++) pagination.append(pageButton('Page ' + i, i, {active:page === i}));
+      pagination.append(pageButton('Next page', page + 1, {icon:'chevron-right', disabled:page === pages}));
+    }
+    function addDetail(label, content, customClass) {
+      var field = node('section', 'detail-field' + (customClass ? ' ' + customClass : ''));
+      field.append(node('h3', '', label));
+      if (content instanceof Node) field.append(content);
+      else field.append(node('p', '', content === undefined || content === null || content === '' ? '—' : content));
+      drawerFields.append(field);
+    }
+    function openDrawer(record, trigger) {
+      lastFocus = trigger || document.activeElement;
+      drawerFields.replaceChildren();
+      addDetail('Name', record.name);
+      var email = node('a', 'detail-link', record.email || '—');
+      email.href = 'mailto:' + encodeURIComponent(record.email || '');
+      addDetail('Email', email);
+      addDetail('Contact Number', record.contact_number);
+      addDetail('Topic', addBadge(record.topic));
+      addDetail('Message', record.message, 'detail-message');
+      addDetail('Submitted At', displayDate(record.created_at) + (displayTime(record.created_at) ? ', ' + displayTime(record.created_at) : ''));
+      addDetail('Consent Recorded', displayDate(record.consent_at) + (displayTime(record.consent_at) ? ', ' + displayTime(record.consent_at) : ''));
+      drawer.removeAttribute('inert');
+      drawer.setAttribute('aria-hidden', 'false');
+      drawer.classList.add('is-open');
+      backdrop.classList.add('is-visible');
+      document.body.classList.add('drawer-open');
+      document.getElementById('close-drawer').focus();
+    }
+    function closeDrawer(restoreFocus) {
+      if (!drawer.classList.contains('is-open')) return;
+      drawer.classList.remove('is-open');
+      backdrop.classList.remove('is-visible');
+      drawer.setAttribute('aria-hidden', 'true');
+      drawer.setAttribute('inert', '');
+      document.body.classList.remove('drawer-open');
+      if (restoreFocus !== false && lastFocus && lastFocus.isConnected) lastFocus.focus();
+    }
+    function showRecords(items) {
+      allRecords = Array.isArray(items) ? items : [];
+      setLoginMode(false);
+      login.hidden = true;
+      panel.hidden = false;
+      logout.hidden = false;
+      document.getElementById('header-actions').hidden = false;
+      document.getElementById('count').textContent = allRecords.length.toLocaleString('en-MY');
+      populateTopics();
+      page = 1;
+      render();
+    }
+    function load() {
+      status.textContent = 'Loading enquiries…';
+      request('GET').then(function (data) {
+        showRecords(data.records);
+        status.textContent = '';
+      }).catch(function (error) {
+        if (error.code === 401) {
+          showLogin();
+          status.textContent = '';
+        } else {
+          status.textContent = error.message;
+        }
+      });
+    }
+
+    [search, topic, from, to].forEach(function (control) {
+      control.addEventListener(control === search ? 'input' : 'change', function () { page = 1; render(); });
+    });
+    document.getElementById('clear-filters').addEventListener('click', function () {
+      search.value = ''; topic.value = ''; from.value = ''; to.value = '';
+      page = 1; render();
+    });
+    document.getElementById('login-form').addEventListener('submit', function (event) {
+      event.preventDefault();
+      status.textContent = 'Signing in…';
+      var submit = this.querySelector('button[type=submit]');
+      submit.disabled = true;
+      request('POST', {action:'login', password:document.getElementById('password').value})
+        .then(function () { document.getElementById('password').value = ''; load(); })
+        .catch(function (error) { status.textContent = error.message; })
+        .finally(function () { submit.disabled = false; });
+    });
+    document.getElementById('refresh').addEventListener('click', load);
+    logout.addEventListener('click', function () {
+      request('POST', {action:'logout'}).then(function () {
+        showLogin(); status.textContent = 'Signed out.';
+      }).catch(function (error) { status.textContent = error.message; });
+    });
+    document.getElementById('close-drawer').addEventListener('click', function () { closeDrawer(); });
+    document.getElementById('close-drawer-bottom').addEventListener('click', function () { closeDrawer(); });
+    backdrop.addEventListener('click', function () { closeDrawer(); });
+    document.addEventListener('keydown', function (event) {
+      if (!drawer.classList.contains('is-open')) return;
+      if (event.key === 'Escape') { event.preventDefault(); closeDrawer(); return; }
+      if (event.key === 'Tab') {
+        var focusable = Array.from(drawer.querySelectorAll('a[href], button:not([disabled])'));
+        if (!focusable.length) return;
+        var first = focusable[0], last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {event.preventDefault();last.focus();}
+        else if (!event.shiftKey && document.activeElement === last) {event.preventDefault();first.focus();}
+      }
+    });
     load();
   })();
   </script>
