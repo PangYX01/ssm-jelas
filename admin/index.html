@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#2e3192">
   <title>Enquiries | SSM Jelas Admin</title>
   <link rel="icon" type="image/png" href="../img/favicon-light.png">
-  <link rel="stylesheet" href="admin.css?v=20261026-login-fix">
+  <link rel="stylesheet" href="admin.css?v=20261026-bulk-export-final">
 </head>
 <body class="login-mode">
   <div class="app-shell">
@@ -76,21 +76,52 @@
             <select id="topic-filter"><option value="">All Topics</option></select>
           </div>
           <div class="filter-field date-field">
-            <span class="field-label" id="date-range-label">Date Range</span>
-            <div class="date-range" role="group" aria-labelledby="date-range-label">
-              <label for="date-from" class="visually-hidden">From date</label>
-              <input id="date-from" type="date" title="From date" aria-label="From date">
-              <span class="date-separator" aria-hidden="true">–</span>
-              <label for="date-to" class="visually-hidden">To date</label>
-              <input id="date-to" type="date" title="To date" aria-label="To date">
+            <button type="button" id="date-range-button" class="date-range-trigger" aria-label="Choose a date range" aria-haspopup="dialog" aria-controls="date-range-popover" aria-expanded="false">
+              <svg class="date-trigger-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18"/></svg>
+              <span class="date-trigger-copy"><span>Date Range</span><strong id="date-range-display">Select date range</strong></span>
+              <svg class="date-trigger-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div id="date-range-popover" class="date-range-popover" role="dialog" aria-label="Select date range" hidden>
+              <div class="date-popover-heading">Filter by submission date</div>
+              <div class="date-picker-fields">
+                <label for="date-from">From<input id="date-from" type="date" aria-label="From date"></label>
+                <label for="date-to">To<input id="date-to" type="date" aria-label="To date"></label>
+              </div>
+              <p id="date-range-error" class="date-range-error" role="alert" hidden>End date must be on or after start date.</p>
+              <div class="date-popover-actions">
+                <button type="button" id="date-reset" class="date-reset">Reset</button>
+                <button type="button" id="date-apply" class="date-apply">Apply dates</button>
+              </div>
             </div>
           </div>
           <button id="clear-filters" class="clear-button" type="button">Clear</button>
+          <button id="export-all" class="export-all-button" type="button" title="Download every enquiry, regardless of filters">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/></svg>
+            Export CSV
+          </button>
+        </div>
+
+        <div class="bulk-bar" aria-label="Bulk enquiry actions">
+          <div class="bulk-selection">
+            <input id="bulk-select-current" type="checkbox" aria-label="Select all enquiries on this page">
+            <strong id="selected-count" aria-live="polite">0 selected</strong>
+          </div>
+          <div class="bulk-actions">
+            <button id="delete-selected" class="bulk-delete" type="button" disabled>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v6m4-6v6"/></svg>
+              Delete selected
+            </button>
+            <button id="export-selected" class="bulk-export" type="button" disabled>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/></svg>
+              Export Selected CSV
+            </button>
+          </div>
         </div>
 
         <div class="table-scroll" tabindex="0" role="region" aria-label="Enquiries table (scroll horizontally on smaller screens)">
           <table class="enquiries-table">
             <thead><tr>
+              <th scope="col" class="col-checkbox"><input type="checkbox" id="select-current" aria-label="Select all enquiries on this page"></th>
               <th scope="col" class="col-id">#</th>
               <th scope="col">Name</th>
               <th scope="col">Email</th>
@@ -111,7 +142,18 @@
           <p id="empty-description">Try adjusting your search or filters.</p>
         </div>
         <footer class="table-footer">
-          <p id="results-summary">Showing 0 entries</p>
+          <div class="table-footer-left">
+            <p id="results-summary">Showing 0 entries</p>
+            <label class="per-page-field" for="per-page">Show
+              <select id="per-page" aria-label="Enquiries per page">
+                <option value="10" selected>10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+              entries
+            </label>
+          </div>
           <div class="pagination" id="pagination" aria-label="Enquiry pages"></div>
         </footer>
       </section>
@@ -136,280 +178,480 @@
 
   <script>
   (function () {
-    'use strict';
-    var login = document.getElementById('login-panel');
-    var panel = document.getElementById('records-panel');
-    var status = document.getElementById('status');
-    var logout = document.getElementById('logout');
-    var tbody = document.getElementById('records');
-    var search = document.getElementById('search');
-    var topic = document.getElementById('topic-filter');
-    var from = document.getElementById('date-from');
-    var to = document.getElementById('date-to');
-    var drawer = document.getElementById('details-drawer');
-    var backdrop = document.getElementById('drawer-backdrop');
-    var drawerFields = document.getElementById('drawer-fields');
-    var pagination = document.getElementById('pagination');
-    var empty = document.getElementById('empty-state');
-    var allRecords = [];
-    var page = 1;
-    var perPage = 8;
-    var lastFocus = null;
+  'use strict';
+  var login = document.getElementById('login-panel');
+  var panel = document.getElementById('records-panel');
+  var status = document.getElementById('status');
+  var logout = document.getElementById('logout');
+  var tbody = document.getElementById('records');
+  var search = document.getElementById('search');
+  var topic = document.getElementById('topic-filter');
+  var from = document.getElementById('date-from');
+  var to = document.getElementById('date-to');
+  var dateTrigger = document.getElementById('date-range-button');
+  var datePopover = document.getElementById('date-range-popover');
+  var dateDisplay = document.getElementById('date-range-display');
+  var dateError = document.getElementById('date-range-error');
+  var appliedDateFrom = '';
+  var appliedDateTo = '';
+  var drawer = document.getElementById('details-drawer');
+  var backdrop = document.getElementById('drawer-backdrop');
+  var drawerFields = document.getElementById('drawer-fields');
+  var pagination = document.getElementById('pagination');
+  var empty = document.getElementById('empty-state');
+  var perPageSelect = document.getElementById('per-page');
+  var bulkSelect = document.getElementById('bulk-select-current');
+  var headerSelect = document.getElementById('select-current');
+  var selectedCount = document.getElementById('selected-count');
+  var bulkDelete = document.getElementById('delete-selected');
+  var bulkExport = document.getElementById('export-selected');
+  var exportAll = document.getElementById('export-all');
+  var selectedRecords = new Map();
+  var visibleRecords = [];
+  var page = 1;
+  var perPage = 10;
+  var lastFocus = null;
+  var activeRequest = 0;
+  var filterTimer = null;
 
-    function node(tag, className, content) {
-      var el = document.createElement(tag);
-      if (className) el.className = className;
-      if (content !== undefined && content !== null) el.textContent = String(content);
-      return el;
-    }
-    function iconMarkup(name) {
-      if (name === 'eye') return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.4-5.5 9.5-5.5 9.5 5.5 9.5 5.5-3.4 5.5-9.5 5.5S2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.5"/></svg>';
-      if (name === 'chevron-left') return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>';
-      return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>';
-    }
-    function parseDate(value) {
-      var date = new Date(value || '');
-      return Number.isNaN(date.getTime()) ? null : date;
-    }
-    function displayDate(value) {
-      var date = parseDate(value);
-      if (!date) return '—';
-      return date.toLocaleDateString('en-MY', {day:'2-digit', month:'short', year:'numeric'});
-    }
-    function displayTime(value) {
-      var date = parseDate(value);
-      if (!date) return '';
-      return date.toLocaleTimeString('en-MY', {hour:'2-digit', minute:'2-digit', hour12:true});
-    }
-    function badgeClass(value) {
-      var label = String(value || '').toLowerCase();
-      if (label.includes('renew') || label.includes('expir')) return 'topic-renewal';
-      if (label.includes('document') || label.includes('certificate')) return 'topic-documents';
-      if (label.includes('information') || label.includes('administrat') || label.includes('change')) return 'topic-information';
-      return 'topic-registration';
-    }
-    function addBadge(value) {
-      return node('span', 'topic-badge ' + badgeClass(value), value || 'Other');
-    }
-    function request(method, data) {
-      return fetch('/admin-api.php', {
-        method: method,
-        credentials: 'same-origin',
-        headers: {'Content-Type':'application/json'},
-        body: data ? JSON.stringify(data) : undefined
-      }).then(function (response) {
-        return response.json().then(function (body) {
-          if (!response.ok) throw Object.assign(Error(body.error || 'Request failed'), {code: response.status});
-          return body;
-        });
+  function node(tag, className, content) {
+    var el = document.createElement(tag);
+    if (className) el.className = className;
+    if (content !== undefined && content !== null) el.textContent = String(content);
+    return el;
+  }
+  function iconMarkup(name) {
+    if (name === 'eye') return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.4-5.5 9.5-5.5 9.5 5.5 9.5 5.5-3.4 5.5-9.5 5.5S2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.5"/></svg>';
+    if (name === 'trash') return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v6m4-6v6"/></svg>';
+    if (name === 'download') return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/></svg>';
+    if (name === 'chevron-left') return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>';
+    return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>';
+  }
+  function parseDate(value) {
+    var date = new Date(value || '');
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+  function displayDate(value) {
+    var date = parseDate(value);
+    return date ? date.toLocaleDateString('en-MY', {day:'2-digit', month:'short', year:'numeric', timeZone:'Asia/Kuala_Lumpur'}) : '—';
+  }
+  function displayTime(value) {
+    var date = parseDate(value);
+    return date ? date.toLocaleTimeString('en-MY', {hour:'2-digit', minute:'2-digit', hour12:true, timeZone:'Asia/Kuala_Lumpur'}) : '';
+  }
+  function badgeClass(value) {
+    var label = String(value || '').toLowerCase();
+    if (label.includes('renew') || label.includes('expir')) return 'topic-renewal';
+    if (label.includes('document') || label.includes('certificate')) return 'topic-documents';
+    if (label.includes('information') || label.includes('administrat') || label.includes('change')) return 'topic-information';
+    return 'topic-registration';
+  }
+  function addBadge(value) { return node('span', 'topic-badge ' + badgeClass(value), value || 'Other'); }
+  function request(method, data, params) {
+    var url = '/admin-api.php' + (params ? '?' + params.toString() : '');
+    return fetch(url, {
+      method:method,
+      credentials:'same-origin',
+      cache:'no-store',
+      headers:{'Content-Type':'application/json'},
+      body:data ? JSON.stringify(data) : undefined
+    }).then(function (response) {
+      return response.json().then(function (body) {
+        if (!response.ok) throw Object.assign(Error(body.error || 'Request failed'), {code:response.status});
+        return body;
       });
-    }
-    function setLoginMode(isLoginMode) {
-      document.body.classList.toggle('login-mode', !!isLoginMode);
-    }
-    function showLogin() {
-      closeDrawer(false);
-      setLoginMode(true);
-      login.hidden = false;
-      panel.hidden = true;
-      logout.hidden = true;
-      document.getElementById('header-actions').hidden = true;
-      allRecords = [];
-    }
-    function populateTopics() {
-      var topics = Array.from(new Set(allRecords.map(function (record) { return String(record.topic || ''); }).filter(Boolean))).sort();
-      topic.replaceChildren(new Option('All Topics', ''));
-      topics.forEach(function (value) { topic.add(new Option(value, value)); });
-    }
-    function dateKey(value) {
-      var date = parseDate(value);
-      if (!date) return '';
-      var y = String(date.getFullYear());
-      var m = String(date.getMonth() + 1).padStart(2, '0');
-      var d = String(date.getDate()).padStart(2, '0');
-      return y + '-' + m + '-' + d;
-    }
-    function filteredRecords() {
-      var q = search.value.trim().toLocaleLowerCase();
-      var selectedTopic = topic.value;
-      return allRecords.filter(function (record) {
-        if (selectedTopic && record.topic !== selectedTopic) return false;
-        if (q) {
-          var text = [record.name, record.email, record.contact_number, record.message, record.topic, record.id].join(' ').toLocaleLowerCase();
-          if (!text.includes(q)) return false;
-        }
-        var day = dateKey(record.created_at);
-        if (from.value && (!day || day < from.value)) return false;
-        if (to.value && (!day || day > to.value)) return false;
-        return true;
-      });
-    }
-    function makeButton(text, label, className) {
-      var btn = node('button', className, text);
-      btn.type = 'button';
-      btn.setAttribute('aria-label', label);
-      return btn;
-    }
-    function appendCell(row, content, className) {
-      var cell = node('td', className || '');
-      if (content instanceof Node) cell.append(content);
-      else cell.textContent = content === undefined || content === null || content === '' ? '—' : String(content);
-      row.append(cell);
-      return cell;
-    }
-    function renderRow(record) {
-      var row = node('tr');
-      appendCell(row, record.id, 'cell-id');
-      appendCell(row, record.name, 'cell-name');
-      var emailCell = node('td', 'cell-email');
-      row.append(emailCell);
-      var mailto = node('a', '', record.email || '—');
-      mailto.href = 'mailto:' + encodeURIComponent(record.email || '');
-      emailCell.append(mailto);
-      appendCell(row, record.contact_number, 'cell-contact');
-      appendCell(row, addBadge(record.topic), 'cell-topic');
-      var preview = node('span', 'message-preview', record.message || '—');
-      preview.title = record.message || '';
-      appendCell(row, preview, 'cell-message');
-      var time = node('time', 'submitted-time');
-      time.dateTime = record.created_at || '';
-      time.append(node('span', '', displayDate(record.created_at)), node('small', '', displayTime(record.created_at)));
-      appendCell(row, time, 'cell-date');
-      var btn = makeButton('', 'View enquiry from ' + (record.name || 'unknown'), 'icon-button view-button');
-      btn.innerHTML = iconMarkup('eye');
-      btn.addEventListener('click', function () { openDrawer(record, btn); });
-      appendCell(row, btn, 'cell-actions');
-      return row;
-    }
-    function pageButton(label, newPage, options) {
-      var btn = makeButton('', label, 'page-button' + (options && options.active ? ' is-active' : ''));
-      btn.innerHTML = options && options.icon ? iconMarkup(options.icon) : String(newPage);
-      if (options && options.active) btn.setAttribute('aria-current', 'page');
-      if (options && options.disabled) btn.disabled = true;
-      btn.addEventListener('click', function () { page = newPage; render(); });
-      return btn;
-    }
-    function render() {
-      var records = filteredRecords();
-      var pages = Math.max(1, Math.ceil(records.length / perPage));
-      page = Math.min(page, pages);
-      var offset = (page - 1) * perPage;
-      var visible = records.slice(offset, offset + perPage);
-      tbody.replaceChildren.apply(tbody, visible.map(renderRow));
-      empty.hidden = records.length !== 0;
-      document.querySelector('.table-scroll').hidden = records.length === 0;
-      document.getElementById('empty-description').textContent = allRecords.length ? 'Try adjusting your search or filters.' : 'New enquiries will appear here when submitted.';
-      document.getElementById('results-summary').textContent = records.length ?
-        'Showing ' + (offset + 1) + ' to ' + (offset + visible.length) + ' of ' + records.length + ' entries' :
-        'Showing 0 entries';
-      pagination.replaceChildren();
-      if (pages <= 1) return;
-      pagination.append(pageButton('Previous page', page - 1, {icon:'chevron-left', disabled:page === 1}));
-      var first = Math.max(1, Math.min(page - 2, pages - 4));
-      var last = Math.min(pages, first + 4);
-      for (var i = first; i <= last; i++) pagination.append(pageButton('Page ' + i, i, {active:page === i}));
-      pagination.append(pageButton('Next page', page + 1, {icon:'chevron-right', disabled:page === pages}));
-    }
-    function addDetail(label, content, customClass) {
-      var field = node('section', 'detail-field' + (customClass ? ' ' + customClass : ''));
-      field.append(node('h3', '', label));
-      if (content instanceof Node) field.append(content);
-      else field.append(node('p', '', content === undefined || content === null || content === '' ? '—' : content));
-      drawerFields.append(field);
-    }
-    function openDrawer(record, trigger) {
-      lastFocus = trigger || document.activeElement;
-      drawerFields.replaceChildren();
-      addDetail('Name', record.name);
-      var email = node('a', 'detail-link', record.email || '—');
-      email.href = 'mailto:' + encodeURIComponent(record.email || '');
-      addDetail('Email', email);
-      addDetail('Contact Number', record.contact_number);
-      addDetail('Topic', addBadge(record.topic));
-      addDetail('Message', record.message, 'detail-message');
-      addDetail('Submitted At', displayDate(record.created_at) + (displayTime(record.created_at) ? ', ' + displayTime(record.created_at) : ''));
-      drawer.removeAttribute('inert');
-      drawer.setAttribute('aria-hidden', 'false');
-      drawer.classList.add('is-open');
-      backdrop.classList.add('is-visible');
-      document.body.classList.add('drawer-open');
-      document.getElementById('close-drawer').focus();
-    }
-    function closeDrawer(restoreFocus) {
-      if (!drawer.classList.contains('is-open')) return;
-      drawer.classList.remove('is-open');
-      backdrop.classList.remove('is-visible');
-      drawer.setAttribute('aria-hidden', 'true');
-      drawer.setAttribute('inert', '');
-      document.body.classList.remove('drawer-open');
-      if (restoreFocus !== false && lastFocus && lastFocus.isConnected) lastFocus.focus();
-    }
-    function showRecords(items) {
-      allRecords = Array.isArray(items) ? items : [];
+    });
+  }
+  function setLoginMode(value) { document.body.classList.toggle('login-mode', !!value); }
+  function showLogin() {
+    activeRequest++;
+    clearTimeout(filterTimer);
+    closeDrawer(false);
+    closeDatePopover();
+    setLoginMode(true);
+    login.hidden = false;
+    panel.hidden = true;
+    logout.hidden = true;
+    document.getElementById('header-actions').hidden = true;
+    visibleRecords = [];
+    selectedRecords.clear();
+    updateSelection();
+  }
+  function populateTopics(topics) {
+    var chosen = topic.value;
+    topic.replaceChildren(new Option('All Topics', ''));
+    (Array.isArray(topics) ? topics : []).forEach(function (value) {
+      if (typeof value === 'string' && value) topic.add(new Option(value, value));
+    });
+    topic.value = chosen;
+  }
+  function makeButton(text, label, className) {
+    var btn = node('button', className, text);
+    btn.type = 'button';
+    btn.setAttribute('aria-label', label);
+    btn.title = label;
+    return btn;
+  }
+  function appendCell(row, content, className) {
+    var cell = node('td', className || '');
+    if (content instanceof Node) cell.append(content);
+    else cell.textContent = content === undefined || content === null || content === '' ? '—' : String(content);
+    row.append(cell);
+    return cell;
+  }
+  function updateSelection() {
+    var count = selectedRecords.size;
+    selectedCount.textContent = count + ' selected';
+    bulkDelete.disabled = count === 0;
+    bulkExport.disabled = count === 0;
+    var numberVisible = visibleRecords.filter(function (r) {return selectedRecords.has(String(r.id));}).length;
+    [bulkSelect, headerSelect].forEach(function (input) {
+      input.checked = visibleRecords.length > 0 && numberVisible === visibleRecords.length;
+      input.indeterminate = numberVisible > 0 && numberVisible < visibleRecords.length;
+      input.disabled = visibleRecords.length === 0;
+    });
+    Array.from(tbody.querySelectorAll('tr')).forEach(function (row) {
+      var checkbox = row.querySelector('input.row-select');
+      if (!checkbox) return;
+      var active = selectedRecords.has(row.dataset.recordId);
+      checkbox.checked = active;
+      row.classList.toggle('is-selected', active);
+    });
+  }
+  function togglePageSelection(checked) {
+    visibleRecords.forEach(function (record) {
+      if (checked) selectedRecords.set(String(record.id), record);
+      else selectedRecords.delete(String(record.id));
+    });
+    updateSelection();
+  }
+  function renderRow(record) {
+    var row = node('tr');
+    row.dataset.recordId = String(record.id);
+    var checkCell = node('td', 'cell-checkbox');
+    var checkbox = node('input', 'row-select');
+    checkbox.type = 'checkbox';
+    checkbox.setAttribute('aria-label', 'Select enquiry ' + record.id + ' from ' + (record.name || 'unknown'));
+    checkbox.checked = selectedRecords.has(String(record.id));
+    checkbox.addEventListener('change', function () {
+      if (checkbox.checked) selectedRecords.set(String(record.id), record);
+      else selectedRecords.delete(String(record.id));
+      updateSelection();
+    });
+    checkCell.append(checkbox);
+    row.append(checkCell);
+    appendCell(row, record.id, 'cell-id');
+    appendCell(row, record.name, 'cell-name');
+    var emailCell = node('td', 'cell-email');
+    var mail = node('a', '', record.email || '—');
+    mail.href = 'mailto:' + encodeURIComponent(record.email || '');
+    emailCell.append(mail);
+    row.append(emailCell);
+    appendCell(row, record.contact_number, 'cell-contact');
+    appendCell(row, addBadge(record.topic), 'cell-topic');
+    var preview = node('span', 'message-preview', record.message || '—');
+    preview.title = record.message || '';
+    appendCell(row, preview, 'cell-message');
+    var submitted = node('time', 'submitted-time');
+    submitted.dateTime = record.created_at || '';
+    submitted.append(node('span', '', displayDate(record.created_at)), node('small', '', displayTime(record.created_at)));
+    appendCell(row, submitted, 'cell-date');
+    var actions = node('div', 'row-actions');
+    var view = makeButton('', 'View enquiry from ' + (record.name || 'unknown'), 'icon-button view-button');
+    view.innerHTML = iconMarkup('eye');
+    view.addEventListener('click', function () { openDrawer(record, view); });
+    var remove = makeButton('', 'Delete enquiry ' + record.id, 'icon-button delete-button');
+    remove.innerHTML = iconMarkup('trash');
+    remove.addEventListener('click', function () { deleteEntries([record.id]); });
+    actions.append(view, remove);
+    appendCell(row, actions, 'cell-actions');
+    return row;
+  }
+  function pageButton(label, newPage, options) {
+    var btn = makeButton('', label, 'page-button' + (options && options.active ? ' is-active' : ''));
+    btn.innerHTML = options && options.icon ? iconMarkup(options.icon) : String(newPage);
+    if (options && options.active) btn.setAttribute('aria-current', 'page');
+    if (options && options.disabled) btn.disabled = true;
+    btn.addEventListener('click', function () { page = newPage; load(); });
+    return btn;
+  }
+  function renderPagination(pages) {
+    pagination.replaceChildren();
+    if (pages <= 1) return;
+    pagination.append(pageButton('Previous page', page - 1, {icon:'chevron-left', disabled:page === 1}));
+    var numbers = new Set([1, pages]);
+    for (var i = Math.max(1, page - 2); i <= Math.min(pages, page + 2); i++) numbers.add(i);
+    if (page <= 4) for (var j = 1; j <= Math.min(pages, 5); j++) numbers.add(j);
+    if (page >= pages - 3) for (var k = Math.max(1, pages - 4); k <= pages; k++) numbers.add(k);
+    var sorted = Array.from(numbers).sort(function (a, b) {return a - b;});
+    var previous = 0;
+    sorted.forEach(function (number) {
+      if (number > previous + 1) pagination.append(node('span', 'page-ellipsis', '…'));
+      pagination.append(pageButton('Page ' + number, number, {active:page === number}));
+      previous = number;
+    });
+    pagination.append(pageButton('Next page', page + 1, {icon:'chevron-right', disabled:page === pages}));
+  }
+  function render(data) {
+    visibleRecords = Array.isArray(data.records) ? data.records : [];
+    var filteredCount = Math.max(0, Number(data.total) || 0);
+    var totalCount = Math.max(0, Number(data.total_count) || 0);
+    page = Math.max(1, Number(data.page) || page);
+    var pages = Math.max(1, Math.ceil(filteredCount / perPage));
+    tbody.replaceChildren.apply(tbody, visibleRecords.map(renderRow));
+    empty.hidden = filteredCount !== 0;
+    document.querySelector('.table-scroll').hidden = filteredCount === 0;
+    document.getElementById('empty-description').textContent = totalCount ? 'Try adjusting your search or filters.' : 'New enquiries will appear here when submitted.';
+    var begin = filteredCount ? (page - 1) * perPage + 1 : 0;
+    var end = filteredCount ? begin + visibleRecords.length - 1 : 0;
+    document.getElementById('results-summary').textContent = 'Showing ' + begin.toLocaleString('en-MY') + ' to ' + end.toLocaleString('en-MY') + ' of ' + filteredCount.toLocaleString('en-MY') + ' entries';
+    document.getElementById('count').textContent = totalCount.toLocaleString('en-MY');
+    populateTopics(data.topics);
+    renderPagination(pages);
+    updateSelection();
+  }
+  function addDetail(label, content, customClass) {
+    var field = node('section', 'detail-field' + (customClass ? ' ' + customClass : ''));
+    field.append(node('h3', '', label));
+    if (content instanceof Node) field.append(content);
+    else field.append(node('p', '', content === undefined || content === null || content === '' ? '—' : content));
+    drawerFields.append(field);
+  }
+  function openDrawer(record, trigger) {
+    lastFocus = trigger || document.activeElement;
+    drawerFields.replaceChildren();
+    addDetail('Name', record.name);
+    var email = node('a', 'detail-link', record.email || '—');
+    email.href = 'mailto:' + encodeURIComponent(record.email || '');
+    addDetail('Email', email);
+    addDetail('Contact Number', record.contact_number);
+    addDetail('Topic', addBadge(record.topic));
+    addDetail('Message', record.message, 'detail-message');
+    addDetail('Submitted At', displayDate(record.created_at) + (displayTime(record.created_at) ? ', ' + displayTime(record.created_at) : ''));
+    drawer.removeAttribute('inert');
+    drawer.setAttribute('aria-hidden', 'false');
+    drawer.classList.add('is-open');
+    backdrop.classList.add('is-visible');
+    document.body.classList.add('drawer-open');
+    document.getElementById('close-drawer').focus();
+  }
+  function closeDrawer(restoreFocus) {
+    if (!drawer.classList.contains('is-open')) return;
+    drawer.classList.remove('is-open');
+    backdrop.classList.remove('is-visible');
+    drawer.setAttribute('aria-hidden', 'true');
+    drawer.setAttribute('inert', '');
+    document.body.classList.remove('drawer-open');
+    if (restoreFocus !== false && lastFocus && lastFocus.isConnected) lastFocus.focus();
+  }
+  function load() {
+    var currentRequest = ++activeRequest;
+    status.textContent = 'Loading enquiries…';
+    var params = new URLSearchParams({page:String(page), per_page:String(perPage)});
+    if (search.value.trim()) params.set('search', search.value.trim());
+    if (topic.value) params.set('topic', topic.value);
+    if (appliedDateFrom) params.set('date_from', appliedDateFrom);
+    if (appliedDateTo) params.set('date_to', appliedDateTo);
+    request('GET', null, params).then(function (data) {
+      if (currentRequest !== activeRequest) return;
       setLoginMode(false);
       login.hidden = true;
       panel.hidden = false;
       logout.hidden = false;
       document.getElementById('header-actions').hidden = false;
-      document.getElementById('count').textContent = allRecords.length.toLocaleString('en-MY');
-      populateTopics();
-      page = 1;
-      render();
-    }
-    function load() {
-      status.textContent = 'Loading enquiries…';
-      request('GET').then(function (data) {
-        showRecords(data.records);
+      render(data);
+      status.textContent = '';
+    }).catch(function (error) {
+      if (currentRequest !== activeRequest) return;
+      if (error.code === 401) {
+        showLogin();
         status.textContent = '';
-      }).catch(function (error) {
-        if (error.code === 401) {
-          showLogin();
-          status.textContent = '';
-        } else {
-          status.textContent = error.message;
-        }
-      });
-    }
+      } else status.textContent = error.message;
+    });
+  }
+  function scheduleReload() {
+    clearTimeout(filterTimer);
+    page = 1;
+    filterTimer = setTimeout(load, 220);
+  }
+  function deleteEntries(ids) {
+    var uniqueIds = Array.from(new Set(ids.map(Number).filter(function (id) {return Number.isSafeInteger(id) && id > 0;})));
+    if (!uniqueIds.length) return;
+    var message = uniqueIds.length === 1 ?
+      'Permanently delete this enquiry? This cannot be undone.' :
+      'Permanently delete ' + uniqueIds.length + ' selected enquiries? This cannot be undone.';
+    if (!window.confirm(message)) return;
+    bulkDelete.disabled = true;
+    status.textContent = 'Deleting ' + uniqueIds.length + ' enquiry' + (uniqueIds.length === 1 ? '' : 'ies') + '…';
+    request('POST', {action:'delete', ids:uniqueIds}).then(function (result) {
+      closeDrawer(false);
+      uniqueIds.forEach(function (id) { selectedRecords.delete(String(id)); });
+      updateSelection();
+      status.textContent = '';
+      load();
+    }).catch(function (error) {
+      if (error.code === 401) {showLogin();status.textContent = 'Session expired. Please sign in again.';}
+      else {status.textContent = error.message;updateSelection();}
+    });
+  }
+  function safeCsvValue(value) {
+    var text = String(value === null || value === undefined ? '' : value).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    // Prevent spreadsheet programs evaluating user-submitted values as formulas.
+    if (/^[\s\u0000-\u001f]*[=+@\-]/.test(text)) text = "'" + text;
+    return '"' + text.replace(/"/g, '""') + '"';
+  }
+  function exportCsv() {
+    if (!selectedRecords.size) return;
+    var fields = [['id','ID'], ['name','Name'], ['email','Email'], ['contact_number','Contact Number'], ['topic','Topic'], ['message','Message'], ['consent_at','Consent At (UTC)'], ['created_at','Submitted At (UTC)']];
+    var rows = [fields.map(function (f) {return safeCsvValue(f[1]);}).join(',')];
+    Array.from(selectedRecords.values()).sort(function (a,b) {return Number(b.id)-Number(a.id);}).forEach(function (record) {
+      rows.push(fields.map(function (f) {return safeCsvValue(record[f[0]]);}).join(','));
+    });
+    var blob = new Blob(['\uFEFF' + rows.join('\r\n') + '\r\n'], {type:'text/csv;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement('a');
+    link.href = url;
+    link.download = 'ssm-jelas-enquiries-selected-' + new Date().toISOString().slice(0,10) + '.csv';
+    document.body.append(link);
+    link.click();
+    link.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
 
-    [search, topic, from, to].forEach(function (control) {
-      control.addEventListener(control === search ? 'input' : 'change', function () { page = 1; render(); });
-    });
-    document.getElementById('clear-filters').addEventListener('click', function () {
-      search.value = ''; topic.value = ''; from.value = ''; to.value = '';
-      page = 1; render();
-    });
-    document.getElementById('login-form').addEventListener('submit', function (event) {
-      event.preventDefault();
-      status.textContent = 'Signing in…';
-      var submit = this.querySelector('button[type=submit]');
-      submit.disabled = true;
-      request('POST', {action:'login', password:document.getElementById('password').value})
-        .then(function () { document.getElementById('password').value = ''; load(); })
-        .catch(function (error) { status.textContent = error.message; })
-        .finally(function () { submit.disabled = false; });
-    });
-    document.getElementById('refresh').addEventListener('click', load);
-    logout.addEventListener('click', function () {
-      request('POST', {action:'logout'}).then(function () {
-        showLogin(); status.textContent = 'Signed out.';
-      }).catch(function (error) { status.textContent = error.message; });
-    });
-    document.getElementById('close-drawer').addEventListener('click', function () { closeDrawer(); });
-    document.getElementById('close-drawer-bottom').addEventListener('click', function () { closeDrawer(); });
-    backdrop.addEventListener('click', function () { closeDrawer(); });
-    document.addEventListener('keydown', function (event) {
-      if (!drawer.classList.contains('is-open')) return;
-      if (event.key === 'Escape') { event.preventDefault(); closeDrawer(); return; }
-      if (event.key === 'Tab') {
-        var focusable = Array.from(drawer.querySelectorAll('a[href], button:not([disabled])'));
-        if (!focusable.length) return;
-        var first = focusable[0], last = focusable[focusable.length - 1];
-        if (event.shiftKey && document.activeElement === first) {event.preventDefault();last.focus();}
-        else if (!event.shiftKey && document.activeElement === last) {event.preventDefault();first.focus();}
+  function exportAllCsv() {
+    exportAll.disabled = true;
+    status.textContent = 'Preparing CSV export for all enquiries…';
+    fetch('/admin-api.php?export=all', {
+      method:'GET', credentials:'same-origin', cache:'no-store'
+    }).then(function (response) {
+      if (!response.ok) {
+        return response.json().catch(function () {return {};}).then(function (body) {
+          throw Object.assign(Error(body.error || 'Unable to export enquiries.'), {code:response.status});
+        });
       }
-    });
-    load();
-  })();
+      var contentType = response.headers.get('content-type') || '';
+      if (!contentType.toLowerCase().includes('text/csv')) throw Error('The server did not return a CSV file.');
+      return response.blob();
+    }).then(function (blob) {
+      var url = URL.createObjectURL(blob);
+      var link = document.createElement('a');
+      link.href = url;
+      link.download = 'ssm-jelas-enquiries-all-' + new Date().toISOString().slice(0,10) + '.csv';
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      status.textContent = '';
+    }).catch(function (error) {
+      if (error.code === 401) {
+        showLogin();
+        status.textContent = 'Session expired. Please sign in again.';
+      } else status.textContent = error.message;
+    }).finally(function () {exportAll.disabled = false;});
+  }
+
+  function formatDateShort(value) {
+    if (!value) return '';
+    var parts = value.split('-');
+    return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).toLocaleDateString('en-MY', {day:'numeric', month:'short', year:'numeric'});
+  }
+  function updateDateDisplay() {
+    if (appliedDateFrom && appliedDateTo) dateDisplay.textContent = formatDateShort(appliedDateFrom) + ' – ' + formatDateShort(appliedDateTo);
+    else if (appliedDateFrom) dateDisplay.textContent = 'From ' + formatDateShort(appliedDateFrom);
+    else if (appliedDateTo) dateDisplay.textContent = 'Until ' + formatDateShort(appliedDateTo);
+    else dateDisplay.textContent = 'Select date range';
+    dateTrigger.classList.toggle('has-date', !!(appliedDateFrom || appliedDateTo));
+  }
+  function openDatePopover() {
+    from.value = appliedDateFrom;
+    to.value = appliedDateTo;
+    dateError.hidden = true;
+    datePopover.hidden = false;
+    dateTrigger.setAttribute('aria-expanded', 'true');
+    from.focus();
+  }
+  function closeDatePopover(restoreFocus) {
+    datePopover.hidden = true;
+    dateTrigger.setAttribute('aria-expanded', 'false');
+    dateError.hidden = true;
+    if (restoreFocus) dateTrigger.focus();
+  }
+  dateTrigger.addEventListener('click', function () {
+    if (datePopover.hidden) openDatePopover();
+    else closeDatePopover(true);
+  });
+  document.getElementById('date-apply').addEventListener('click', function () {
+    if (from.value && to.value && from.value > to.value) {
+      dateError.hidden = false;
+      return;
+    }
+    appliedDateFrom = from.value;
+    appliedDateTo = to.value;
+    updateDateDisplay();
+    closeDatePopover(true);
+    scheduleReload();
+  });
+  document.getElementById('date-reset').addEventListener('click', function () {
+    from.value = ''; to.value = '';
+    appliedDateFrom = ''; appliedDateTo = '';
+    updateDateDisplay(); closeDatePopover(true); scheduleReload();
+  });
+  document.addEventListener('pointerdown', function (event) {
+    if (!datePopover.hidden && !event.target.closest('.date-field')) closeDatePopover();
+  });
+  search.addEventListener('input', scheduleReload);
+  topic.addEventListener('change', scheduleReload);
+  document.getElementById('clear-filters').addEventListener('click', function () {
+    search.value = ''; topic.value = ''; from.value = ''; to.value = '';
+    appliedDateFrom = ''; appliedDateTo = '';
+    updateDateDisplay(); closeDatePopover();
+    clearTimeout(filterTimer); page = 1; load();
+  });
+  perPageSelect.addEventListener('change', function () {
+    var n = Number(perPageSelect.value);
+    if (![10, 20, 50, 100].includes(n)) return;
+    perPage = n; page = 1; load();
+  });
+  [headerSelect, bulkSelect].forEach(function (input) {
+    input.addEventListener('change', function () {togglePageSelection(input.checked);});
+  });
+  bulkDelete.addEventListener('click', function () {deleteEntries(Array.from(selectedRecords.keys()));});
+  bulkExport.addEventListener('click', exportCsv);
+  exportAll.addEventListener('click', exportAllCsv);
+  document.getElementById('login-form').addEventListener('submit', function (event) {
+    event.preventDefault();
+    status.textContent = 'Signing in…';
+    var submit = this.querySelector('button[type=submit]');
+    submit.disabled = true;
+    request('POST', {action:'login', password:document.getElementById('password').value})
+      .then(function () { document.getElementById('password').value = ''; load(); })
+      .catch(function (error) { status.textContent = error.message; })
+      .finally(function () { submit.disabled = false; });
+  });
+  document.getElementById('refresh').addEventListener('click', load);
+  logout.addEventListener('click', function () {
+    request('POST', {action:'logout'}).then(function () {
+      showLogin(); status.textContent = 'Signed out.';
+    }).catch(function (error) { status.textContent = error.message; });
+  });
+  document.getElementById('close-drawer').addEventListener('click', function () { closeDrawer(); });
+  document.getElementById('close-drawer-bottom').addEventListener('click', function () { closeDrawer(); });
+  backdrop.addEventListener('click', function () { closeDrawer(); });
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape' && !datePopover.hidden) {event.preventDefault();closeDatePopover(true);return;}
+    if (!drawer.classList.contains('is-open')) return;
+    if (event.key === 'Escape') {event.preventDefault();closeDrawer();return;}
+    if (event.key === 'Tab') {
+      var focusable = Array.from(drawer.querySelectorAll('a[href], button:not([disabled])'));
+      if (!focusable.length) return;
+      var first = focusable[0], last = focusable[focusable.length-1];
+      if (event.shiftKey && document.activeElement === first) {event.preventDefault();last.focus();}
+      else if (!event.shiftKey && document.activeElement === last) {event.preventDefault();first.focus();}
+    }
+  });
+  load();
+})();
+
   </script>
 </body>
 </html>
