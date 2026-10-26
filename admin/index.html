@@ -72,8 +72,8 @@
             </div>
           </div>
           <div class="filter-field topic-field">
-            <label for="topic-filter">Topic</label>
-            <select id="topic-filter"><option value="">All Topics</option></select>
+            <label for="topic-filter">Enquiry Type</label>
+            <select id="topic-filter"><option value="">All Enquiry Types</option></select>
           </div>
           <div class="filter-field date-field">
             <button type="button" id="date-range-button" class="date-range-trigger" aria-label="Choose a date range" aria-haspopup="dialog" aria-controls="date-range-popover" aria-expanded="false">
@@ -126,7 +126,7 @@
               <th scope="col">Name</th>
               <th scope="col">Email</th>
               <th scope="col">Contact Number</th>
-              <th scope="col">Topic</th>
+              <th scope="col">Enquiry Type</th>
               <th scope="col">Message (Preview)</th>
               <th scope="col">Submitted At</th>
               <th scope="col" class="col-actions">Actions</th>
@@ -279,7 +279,7 @@
   }
   function populateTopics(topics) {
     var chosen = topic.value;
-    topic.replaceChildren(new Option('All Topics', ''));
+    topic.replaceChildren(new Option('All Enquiry Types', ''));
     (Array.isArray(topics) ? topics : []).forEach(function (value) {
       if (typeof value === 'string' && value) topic.add(new Option(value, value));
     });
@@ -425,7 +425,7 @@
     email.href = 'mailto:' + encodeURIComponent(record.email || '');
     addDetail('Email', email);
     addDetail('Contact Number', record.contact_number);
-    addDetail('Topic', addBadge(record.topic));
+    addDetail('Enquiry Type', addBadge(record.topic));
     addDetail('Message', record.message, 'detail-message');
     addDetail('Submitted At', displayDate(record.created_at) + (displayTime(record.created_at) ? ', ' + displayTime(record.created_at) : ''));
     drawer.removeAttribute('inert');
@@ -502,7 +502,7 @@
   }
   function exportCsv() {
     if (!selectedRecords.size) return;
-    var fields = [['id','ID'], ['name','Name'], ['email','Email'], ['contact_number','Contact Number'], ['topic','Topic'], ['message','Message'], ['consent_at','Consent At (UTC)'], ['created_at','Submitted At (UTC)']];
+    var fields = [['id','ID'], ['name','Name'], ['email','Email'], ['contact_number','Contact Number'], ['topic','Enquiry Type'], ['message','Message'], ['consent_at','Consent At (UTC)'], ['created_at','Submitted At (UTC)']];
     var rows = [fields.map(function (f) {return safeCsvValue(f[1]);}).join(',')];
     Array.from(selectedRecords.values()).sort(function (a,b) {return Number(b.id)-Number(a.id);}).forEach(function (record) {
       rows.push(fields.map(function (f) {return safeCsvValue(record[f[0]]);}).join(','));
