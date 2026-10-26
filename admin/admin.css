@@ -121,7 +121,7 @@ h1 { color: #0d2147; font-size: clamp(27px, 2.5vw, 35px); line-height: 1.2; lett
 .cell-topic { min-width: 150px; }
 .cell-message { min-width: 165px; max-width: 260px; }
 .message-preview { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 235px; }
-.topic-badge { display: inline-flex; max-width: 190px; border-radius: 99px; align-items: center; padding: 7px 11px; line-height: 1.2; font-size: 11px; font-weight: 750; white-space: normal; }
+.topic-badge { display: inline-flex; border-radius: 99px; align-items: center; padding: 7px 11px; line-height: 1.2; font-size: 11px; font-weight: 750; white-space: normal; }
 .topic-registration { background: #e3efff; color: #155ac3; }
 .topic-renewal { background: #e1f7eb; color: #098250; }
 .topic-documents { background: #eee8ff; color: #6635c2; }
