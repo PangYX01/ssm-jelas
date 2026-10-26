@@ -272,6 +272,7 @@ body.login-mode #status {
 .bulk-bar { display: flex; gap: 20px; flex-wrap: wrap; align-items: center; padding: 13px 22px 13px 17px; margin: 0 0 0; background: #edf4ff; border-top: 1px solid #dce8ff; border-bottom: 1px solid #dce8ff; }
 .bulk-selection, .bulk-actions { display: flex; align-items: center; gap: 12px; }
 .bulk-selection strong { font-size: 13px; font-weight: 700; color: #1b2e56; white-space: nowrap; }
+#bulk-select-current { display: none; }
 input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--brand); cursor: pointer; }
 input[type="checkbox"]:disabled { cursor: not-allowed; opacity: .5; }
 .bulk-actions button { min-height: 38px; display: inline-flex; align-items: center; gap: 8px; border-radius: 8px; padding: 8px 14px; font-size: 12px; font-weight: 700; transition: background .18s ease, transform .18s ease, opacity .18s ease; }
