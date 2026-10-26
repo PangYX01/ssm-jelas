@@ -1,5 +1,5 @@
 <?php
-// Place beside ssm-jelas-status.html and ssm-jelas-lookup.php on PHP hosting.
+// Place beside index.html and ssm-jelas-lookup.php on Plesk PHP hosting.
 declare(strict_types=1);
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store, private');
