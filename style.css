@@ -1652,7 +1652,7 @@ footer p, footer li { font-size: var(--type-ui); line-height: 1.7; }
 @media (max-width: 480px) {
   .w { padding-inline: 16px; }
       .hero .cta { width: 100%; }
-  .hero .btn { flex: 1; padding-inline: 12px;  }
+  .hero .btn { padding-inline: 12px; }
   .ckw { padding: 16px; }
   .fb { padding: 16px; }
   .business-structures { grid-template-columns: minmax(0,1fr); }
