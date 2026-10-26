@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#2e3192">
   <title>Enquiries | SSM Jelas Admin</title>
   <link rel="icon" type="image/png" href="../img/favicon-light.png">
-  <link rel="stylesheet" href="admin.css?v=20261026-sticky-actions">
+  <link rel="stylesheet" href="admin.css?v=20261026-filter-alignment">
 </head>
 <body class="login-mode">
   <div class="app-shell">
@@ -76,9 +76,10 @@
             <select id="topic-filter"><option value="">All Enquiry Types</option></select>
           </div>
           <div class="filter-field date-field">
+            <label for="date-range-button">Date Range</label>
             <button type="button" id="date-range-button" class="date-range-trigger" aria-label="Choose a date range" aria-haspopup="dialog" aria-controls="date-range-popover" aria-expanded="false">
               <svg class="date-trigger-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18"/></svg>
-              <span class="date-trigger-copy"><span>Date Range</span><strong id="date-range-display">Select date range</strong></span>
+              <span class="date-trigger-copy"><strong id="date-range-display">Select date range</strong></span>
               <svg class="date-trigger-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
             </button>
             <div id="date-range-popover" class="date-range-popover" role="dialog" aria-label="Select date range" hidden>
