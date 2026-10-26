@@ -7,9 +7,9 @@
   <meta name="theme-color" content="#2e3192">
   <title>Enquiries | SSM Jelas Admin</title>
   <link rel="icon" type="image/png" href="../img/favicon-light.png">
-  <link rel="stylesheet" href="admin.css">
+  <link rel="stylesheet" href="admin.css?v=20261026-login-fix">
 </head>
-<body>
+<body class="login-mode">
   <div class="app-shell">
     <aside class="sidebar" aria-label="Admin navigation">
       <a class="brand" href="/" aria-label="SSM Jelas homepage">
@@ -328,7 +328,6 @@
       addDetail('Topic', addBadge(record.topic));
       addDetail('Message', record.message, 'detail-message');
       addDetail('Submitted At', displayDate(record.created_at) + (displayTime(record.created_at) ? ', ' + displayTime(record.created_at) : ''));
-      addDetail('Consent Recorded', displayDate(record.consent_at) + (displayTime(record.consent_at) ? ', ' + displayTime(record.consent_at) : ''));
       drawer.removeAttribute('inert');
       drawer.setAttribute('aria-hidden', 'false');
       drawer.classList.add('is-open');
