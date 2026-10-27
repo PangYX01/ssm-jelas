@@ -159,7 +159,7 @@ body.login-mode #status {
 .topic-badge { display: inline-flex; border-radius: 99px; align-items: center; padding: 7px 11px; line-height: 1.2; font-size: 11px; font-weight: 750; white-space: normal; }
 .topic-registration { background: #e3efff; color: #155ac3; }
 .topic-renewal { background: #e1f7eb; color: #098250; }
-.topic-guidance { background: #fff4e5; color: #990523; }
+.topic-guidance { background: #ffdee2; color: #990523; }
 .topic-documents { background: #eee8ff; color: #6635c2; }
 .topic-information { background: #fff1d4; color: #995f05; }
 .submitted-time { display: flex; flex-direction: column; gap: 3px; min-width: 104px; white-space: nowrap; line-height: 1.25; }
