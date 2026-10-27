@@ -243,6 +243,7 @@
   function badgeClass(value) {
     var label = String(value || '').toLowerCase();
     if (label.includes('renew') || label.includes('expir')) return 'topic-renewal';
+    if (label.includes('registra') || label.includes('guidance')) return 'topic-guidance';
     if (label.includes('document') || label.includes('certificate')) return 'topic-documents';
     if (label.includes('information') || label.includes('administrat') || label.includes('change')) return 'topic-information';
     return 'topic-registration';
